@@ -21,29 +21,49 @@ export default {
   props: {username: String},
   data() {
     return {
-      meetings: []
+      meetings: this.getMeetingsWithParticipants()
     };
   },
   methods: {
-    addNewMeeting(meeting) {
-      this.meetings.push(meeting);
+    getMeetingsWithParticipants() {
+      let allMeetings = [];
       axios.get('api/meetings')
-      // axios.post('api/meetings', newMeeting)
-      //     .then(response => {
-      //       this.error = false;
-      //       this.message = "";
-      //       this.$emit('added', this.newMeeting);
-      //       this.newMeeting = {participants: []};
-      //     })
+          .then(meetingsResponse => {
+            this.error = false;
+            this.message = "";
+            meetingsResponse.data.forEach(meeting =>
+                axios.get(`api/meetings/${meeting.id}/participants`)
+                    .then(participantsResponse => {
+                      meeting.participants = participantsResponse.data.map(participantData => participantData.login);
+                      allMeetings.push(meeting)
+                    })
+            )
+          })
+      return allMeetings;
+    },
+    addNewMeeting(meeting) {
+      // handled in child component NewMeetingForm
+      this.meetings = this.getMeetingsWithParticipants() //need to reload list to retrieve id
     },
     addMeetingParticipant(meeting) {
-      meeting.participants.push(this.username);
+      axios.post(
+          `api/meetings/${meeting.id}/participants`,
+          {"login":this.username})
+          .then(response => {
+            meeting.participants.push(this.username);
+          })
     },
     removeMeetingParticipant(meeting) {
-      meeting.participants.splice(meeting.participants.indexOf(this.username), 1);
+      axios.delete(`api/meetings/${meeting.id}/participants/${this.username}`)
+          .then(response => {
+            meeting.participants.splice(meeting.participants.indexOf(this.username), 1);
+          })
     },
     deleteMeeting(meeting) {
-      this.meetings.splice(this.meetings.indexOf(meeting), 1);
+      axios.delete(`api/meetings/${meeting.id}`)
+          .then(response => {
+            this.meetings.splice(this.meetings.indexOf(meeting), 1);
+          })
     },
   }
 }
