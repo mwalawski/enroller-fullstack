@@ -14,6 +14,7 @@
 <script>
 import NewMeetingForm from "./NewMeetingForm";
 import MeetingsList from "./MeetingsList";
+import axios from "axios";
 
 export default {
   components: {NewMeetingForm, MeetingsList},
@@ -26,6 +27,14 @@ export default {
   methods: {
     addNewMeeting(meeting) {
       this.meetings.push(meeting);
+      axios.get('api/meetings')
+      // axios.post('api/meetings', newMeeting)
+      //     .then(response => {
+      //       this.error = false;
+      //       this.message = "";
+      //       this.$emit('added', this.newMeeting);
+      //       this.newMeeting = {participants: []};
+      //     })
     },
     addMeetingParticipant(meeting) {
       meeting.participants.push(this.username);
